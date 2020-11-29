@@ -1,6 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.lang.System.getenv
 
 plugins {
@@ -41,6 +40,7 @@ kotlin {
             }
         }
     }
+    ios()
     cocoapods {
         summary = "A Kotlin MPP Cocoapods Template Library"
         homepage = "https://www.github.com/${getenv("GITHUB_REPOSITORY")}"
@@ -49,7 +49,6 @@ kotlin {
 
         ios.deploymentTarget = "13.5"
     }
-    ios()
     sourceSets {
         val commonMain by getting
         val commonTest by getting {
@@ -69,18 +68,6 @@ kotlin {
         val iosTest by getting
     }
 }
-val packForXcode by tasks.creating(Sync::class) {
-    group = "build"
-    val mode = getenv("CONFIGURATION") ?: "DEBUG"
-    val sdkName = getenv("SDK_NAME") ?: "iphonesimulator"
-    val targetName = "ios" + if (sdkName.startsWith("iphoneos")) "Arm64" else "X64"
-    val framework = kotlin.targets.getByName<KotlinNativeTarget>(targetName).binaries.getFramework(mode)
-    inputs.property("mode", mode)
-    dependsOn(framework.linkTask)
-    from({ framework.outputDirectory })
-    into("$buildDir/xcode-frameworks")
-}
-tasks.getByName("build").dependsOn(packForXcode)
 
 getenv("GITHUB_REPOSITORY")?.let {
     publishing {
@@ -92,4 +79,15 @@ getenv("GITHUB_REPOSITORY")?.let {
             }
         }
     }
+}
+
+val cleanPodBuild by tasks.registering(Delete::class) {
+    with(arrayOf(buildDir, file("$name.podspec"), file("gen"), file("Pods"))) {
+        destroyables.register(this)
+        delete(this)
+    }
+}
+
+tasks.clean {
+    dependsOn(cleanPodBuild)
 }
