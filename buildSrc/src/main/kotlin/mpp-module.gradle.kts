@@ -6,6 +6,7 @@ import java.lang.System.getenv
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
+    kotlin("native.cocoapods")
     `maven-publish`
 }
 
@@ -40,9 +41,15 @@ kotlin {
             }
         }
     }
-    ios {
-        binaries.framework()
+    cocoapods {
+        summary = "A Kotlin MPP Cocoapods Template Library"
+        homepage = "https://www.github.com/${getenv("GITHUB_REPOSITORY")}"
+
+        podfile = rootProject.file("${property("xcodeproj")}/Podfile")
+
+        ios.deploymentTarget = "13.5"
     }
+    ios()
     sourceSets {
         val commonMain by getting
         val commonTest by getting {
